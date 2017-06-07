@@ -9,17 +9,13 @@ var store;
 module('sync copying', {
   beforeEach: function() {
     store = fabricate(startApp(), false);
-
-    return Ember.RSVP.all(['foo','bar','baz','multi','fooBar','fooFix', 'FooEmpty'].map(function(type) {
-      return store.find(type);
-    }));
   }
 });
 
 test('it excludes attributes', function(assert) {
   assert.expect(1);
 
-  var foo = store.getById('foo', '1');
+  var foo = store.peekRecord('foo', '1');
   return Ember.run(function() {
     return foo.copy({property: null}).then(function (copy) {
       assert.equal(copy.get('property'), null);
@@ -30,7 +26,7 @@ test('it excludes attributes', function(assert) {
 test('it shallow copies relation', function(assert) {
   assert.expect(1);
 
-  var fooBar = store.getById('fooBar', '1');
+  var fooBar = store.peekRecord('fooBar', '1');
   return Ember.run(function() {
     return fooBar.copy().then(function (copy) {
       assert.equal(copy.get('fooFix.id'), '1');
@@ -41,7 +37,7 @@ test('it shallow copies relation', function(assert) {
 test('it copies belongsTo relation', function(assert) {
   assert.expect(2);
 
-  var bar = store.getById('bar', '1');
+  var bar = store.peekRecord('bar', '1');
   return Ember.run(function() {
     return bar.copy().then(function (copy) {
       assert.notEqual(copy.get('foo.id'), bar.get('foo.id'));
@@ -53,7 +49,7 @@ test('it copies belongsTo relation', function(assert) {
 test('it copies with empty belongsTo relation', function(assert) {
   assert.expect(2);
 
-  var fooEmpty = store.getById('fooEmpty', '1');
+  var fooEmpty = store.peekRecord('fooEmpty', '1');
   return Ember.run(function() {
     return fooEmpty.copy().then(function (copy) {
       assert.equal(copy.get('property'), fooEmpty.get('property'));
@@ -65,7 +61,7 @@ test('it copies with empty belongsTo relation', function(assert) {
 test('it copies hasMany relation', function(assert) {
   assert.expect(5);
 
-  var baz = store.getById('baz', '1');
+  var baz = store.peekRecord('baz', '1');
   return Ember.run(function() {
     return baz.copy().then(function (copy) {
       assert.equal(copy.get('foos.length'), 2);
@@ -80,7 +76,7 @@ test('it copies hasMany relation', function(assert) {
 test('it copies complex objects', function(assert) {
   assert.expect(6);
 
-  var multi = store.getById('multi', '1');
+  var multi = store.peekRecord('multi', '1');
   return Ember.run(function() {
     return multi.copy().then(function (copy) {
       assert.notEqual(copy.get('bars.firstObject.id'), '1');
@@ -96,8 +92,8 @@ test('it copies complex objects', function(assert) {
 test('it overwrites relations', function(assert) {
   assert.expect(2);
 
-  var multi = store.getById('multi', '1');
-  var myBaz = store.getById('baz', '2');
+  var multi = store.peekRecord('multi', '1');
+  var myBaz = store.peekRecord('baz', '2');
   return Ember.run(function() {
     return multi.copy({baz: myBaz, bars: []}).then(function (copy) {
       assert.equal(copy.get('bars.length'), 0);
@@ -109,7 +105,7 @@ test('it overwrites relations', function(assert) {
 test('it excludes relations', function(assert) {
   assert.expect(2);
 
-  var multi = store.getById('multi', '1');
+  var multi = store.peekRecord('multi', '1');
   return Ember.run(function() {
     return multi.copy({baz: null}).then(function (copy) {
       assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
@@ -121,7 +117,7 @@ test('it excludes relations', function(assert) {
 test('it copies empty objects', function(assert) {
   assert.expect(3);
 
-  var multi = store.getById('multi', '2');
+  var multi = store.peekRecord('multi', '2');
   return Ember.run(function() {
     return multi.copy().then(function (copy) {
       assert.notEqual(copy.get('id'), '2');
